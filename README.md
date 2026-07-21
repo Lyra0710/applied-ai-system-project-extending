@@ -17,18 +17,64 @@ Replace this paragraph with your own summary of what your version does.
 
 ## How The System Works
 
-Explain your design in plain language.
+Explain your design in plain language.<br>
+Real world-recommendation systems like the ones in Spotify, Amazon, Netflix,
+use a combination of a user's personal listening/viewing/purchase history, song/movie/product features, combined with information about other users' behavior to make personalized recommendations.
+<br>
+For example, if a user listens to a lot of rock music, the recommender system will recommend songs that are similar to the ones they have listened to in the past. 
+If a user likes a certain type of movie, the recommender system will recommend movies that are similar to the ones they have watched in the past.
+<br>
+This project is a simplified version of a real-world recommendation system. It uses a simple scoring rule to make recommendations, but it does not use any machine learning or artificial intelligence. 
 
-Some prompts to answer:
 
 - What features does each `Song` use in your system
-  - For example: genre, mood, energy, tempo
+  - The features included in the dataset are artist,genre,mood,energy,tempo_bpm,valence,danceability and acousticness. 
+  - The scoring system used in this project specifically uses genre, mood, target energy and user favorites artist to recommend a song. 
+  - The weights used in this project are:
+    - mood_weight = 3.0
+    - genre_weight = 2.0
+    - artist_weight = 1.5
+    - energy_weight = 0.1
+    - valence_weight = 0.1
+    - tempo_weight = 0.1
+
 - What information does your `UserProfile` store
+  - The user profile stores the user's favorite artist, preferred mood, and desired energy level.
+  - The user profile also includes the user's favorite genre.
+
 - How does your `Recommender` compute a score for each song
+  - First, it compares the user profile to a song's attributes, converting matches to a similarity vector:
+    - Categorical matches (mood, genre, artist) score 1.0 if they match, and 0.0 otherwise.
+    - Numerical attributes (energy, valence, tempo) score a value between 0.0 and 1.0 based on how close they are to the user's targets (using absolute distance: 1 - |song_val - user_pref|).
+  - The recommender then computes the final raw score by taking the dot product of this similarity vector and the user's weight vector.
+  - The raw score is normalized to a scale of 0 to 100 by dividing the raw score by the maximum possible score (the sum of the weights, which is 6.8) and multiplying by 100.
+
 - How do you choose which songs to recommend
+  - The recommender ranks all candidate songs by their normalized score in descending order and returns the top $k$ tracks (where $k$ is requested by the user, defaulting to 5).
+  - If there are fewer than $k$ songs in the catalog, it returns all scored songs.
 
-You can include a simple diagram or bullet list if helpful.
+- Potential Biases & Limitations
+  - Because `mood` (weight 3.0) and `genre` (weight 2.0) carry the heaviest weights, this system might over-prioritize exact genre/mood matches while ignoring great songs in other genres that fit the user's desired energy or tempo.
 
+<br>
+### Song Features
+    genre
+    mood
+    artist
+    energy
+    valence
+    tempo_bpm
+    danceability
+    acousticness
+<br>
+### UserProfile Features
+    favorite_genre
+    favorite_mood
+    favorite_artist
+    target_energy
+    likes_acoustic
+    target_valence
+target_tempo
 ---
 
 ## Getting Started
@@ -68,15 +114,35 @@ You can add more tests in `tests/test_recommender.py`.
 
 ## Sample Recommendation Output
 
-Paste a sample of your recommender's output here as a text block so a reader can see what it produces:
+```text
+Loaded songs: 20
 
-```
-# e.g.:
-# User profile: genre=indie, mood=chill, energy=low
-# Recommendations:
-#   1. ...
-#   2. ...
-#   3. ...
+User Profile: genre=pop, mood=happy, energy=0.8
+============================================================
+
+Top Recommendations:
+
+  1. Sunrise City by Neon Echo (Score: 5.98)
+     Genre: pop | Mood: happy | Energy: 0.82
+     Reasons: genre match (+2.0), mood match (+3.0), energy match (+0.98)
+
+  2. Rooftop Lights by Indigo Parade (Score: 3.96)
+     Genre: indie pop | Mood: happy | Energy: 0.76
+     Reasons: mood match (+3.0), energy match (+0.96)
+
+  3. Gym Hero by Max Pulse (Score: 2.87)
+     Genre: pop | Mood: intense | Energy: 0.93
+     Reasons: genre match (+2.0), energy match (+0.87)
+
+  4. Concrete Jungle by MC Cipher (Score: 0.98)
+     Genre: hip-hop | Mood: confident | Energy: 0.78
+     Reasons: energy match (+0.98)
+
+  5. Night Drive Loop by Neon Echo (Score: 0.95)
+     Genre: synthwave | Mood: moody | Energy: 0.75
+     Reasons: energy match (+0.95)
+
+============================================================
 ```
 
 **Screenshot or video** *(optional)*: <!-- Insert a screenshot or demo video link here -->
