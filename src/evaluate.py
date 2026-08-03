@@ -1,6 +1,9 @@
 import os
 import sys
 from typing import Dict, List, Any
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Ensure path is correct for imports
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))

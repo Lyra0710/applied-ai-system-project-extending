@@ -1,6 +1,9 @@
 import streamlit as st
 import os
 import sys
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Ensure import path is correct
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))

@@ -141,9 +141,12 @@ def recommend_songs(user_prefs: Dict, songs: List[Dict], k: int = 5) -> List[Tup
 
 import os
 import json
+from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 from pydantic import BaseModel, Field
+
+load_dotenv()
 
 # Define Pydantic structures for Type-Safe Gemini API communication
 
