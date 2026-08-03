@@ -105,12 +105,26 @@ Beyond that, several improvements would make the system more realistic and more 
 
 ---
 
-## 9. Personal Reflection  
+## 9. Personal Reflection & Ethics
 
-The most significant learning moment in this project occurred during the weight-shift experiment in Step 3. The initial expectation was that doubling the energy weight and halving the genre weight would change which songs ranked at the top for at least some profiles. Instead, every top-5 ranking remained identical across all five profiles. This result clarified that recommendation quality is not solely a function of individual feature weights, but of how those weights compare to one another across the entire scoring formula — mood's fixed +3.0 bonus remained dominant regardless of how energy or genre were adjusted. This shifted the investigation from "which weight should be higher" to "which feature structurally cannot be outweighed," a more useful question for diagnosing bias.
+### Limitations or Biases in the System
+EchoMatch 2.0 is constrained by the following limitations and biases:
+1. **Catalog Constraints**: The in-context catalog is small (only 20 songs). When user queries specify genres or moods outside this set, the LLM must compromise or map them to close matches, which can lead to over-generalization.
+2. **Mood Dominance**: The model card analysis in Section 6 shows that categorical mood matches structurally dominate numeric features (such as energy similarity). This means a user requesting intense music who mentions a sad mood is pushed toward calm tracks.
+3. **Data Representation Bias**: Features like mood and genre are represented as flat, categorical strings. This ignores the reality of musical genres (which exist on a spectrum) and moods (which are multidimensional).
 
-The AI coding assistant was most useful for quickly applying targeted, well-scoped changes (adjusting two specific point values) and for running controlled before/after comparisons, such as diffing full terminal output across profiles to verify whether rankings had changed. It was also useful for surfacing the underlying cause of the "Gym Hero" behavior described in Section 7 — that partial credit from two correct features can outrank songs matching neither. Verification was still necessary at each step: scoring logic changes were checked against the unit tests before accepting them, and the ranking-identical result from the weight-shift experiment was confirmed independently via a direct diff of the output rather than relying on a written summary of the change.
+### AI Misuse and Prevention
+1. **Misuse Potential**: Because the recommender allows free-form natural language query inputs, it could be subject to prompt injection attacks aimed at leaking developer instructions, serving as a general-purpose chat interface, or outputting inappropriate content.
+2. **Prevention Strategy**: We implemented an **Input Guardrail** as a first-line check. This guardrail uses structured output to evaluate the incoming prompt's safety and music-related context *before* feeding it to the retriever or recommendation agents. If the check fails, the query is immediately rejected and execution halts safely.
 
-It was somewhat surprising how convincing a purely additive point system can feel. None of the five profiles produced an obviously broken result — each returned a top track that appeared reasonable at a glance, even in cases where a core preference (such as energy) was effectively disregarded. This suggests that a recommender does not need sophisticated modeling to appear trustworthy; a simple sum of matched attributes is often sufficient to produce output that reads as intentional, which is itself a source of risk if the underlying scoring is not well understood.
+### Reliability Testing Surprises
+During automated and manual verification:
+1. **Plausibility Illusion**: I was surprised by how coherent the system's output appeared even during adversarial profiles. When tested with unmatched parameters, the Recommender Agent generated highly convincing explanations for sub-optimal tracks. Without directly inspecting numeric attributes (like energy levels), it is easy to assume the recommendation is highly accurate when it actually represents a compromise.
+2. **Guardrail Edge Cases**: Fallback modes must be tested robustly. When testing the guardrail offline (without an API key), a simple length-based heuristic fallback was required to ensure the application did not crash, indicating that hybrid local/AI systems need dual-layered validation checks.
 
-If this project were extended further, the next step would be to test whether making mood a continuous similarity score (for example, using a valence/arousal representation instead of an exact string match) reduces the mood-dominance bias identified in Section 6, and to add a diversity or exploration mechanism so that repeat queries from the same profile do not always return the identical top five tracks.
+### AI Collaboration and Suggestions
+Throughout this project, I collaborated with the AI coding assistant for design, prototyping, and debugging:
+1. **Helpful Suggestion**: The assistant recommended using Pydantic schemas with Gemini's structured schema output (`response_schema`). This forced the AI model to output validated JSON, resolving parsing errors and ensuring that the self-critique loop operated on predictable key-value fields.
+2. **Flawed Suggestion**: The assistant initially suggested executing the Streamlit app using standard `python src/app.py` in the setup instructions. Since Streamlit pages must be served using the Streamlit execution engine, this failed, and had to be corrected to `streamlit run src/app.py`.
+
+
